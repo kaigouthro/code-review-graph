@@ -17,7 +17,7 @@ Add to your project's `.mcp.json`:
   "mcpServers": {
     "code-review-graph": {
       "command": "/path/to/code-review-graph/.venv/bin/python",
-      "args": ["-m", "server.main"],
+      "args": ["-m", "code_review_graph.main"],
       "cwd": "/path/to/code-review-graph"
     }
   }
@@ -51,7 +51,7 @@ Comprehensive structural review of a branch diff with blast-radius analysis.
 
 ### 4. Watch mode (optional)
 ```bash
-python -m server.incremental watch
+code-review-graph watch
 ```
 Auto-updates the graph on every file save. Zero manual work.
 

@@ -24,7 +24,7 @@ Never include full files unless explicitly asked.
 <section name="commands">
 MCP tools: build_or_update_graph_tool, get_impact_radius_tool, query_graph_tool, get_review_context_tool, semantic_search_nodes_tool, embed_graph_tool, list_graph_stats_tool, get_docs_section_tool
 Skills: build-graph, review-delta, review-pr
-CLI: python -m server.incremental [update|build|status|watch]
+CLI: code-review-graph [update|build|status|watch]
 </section>
 
 <section name="legal">
@@ -32,7 +32,7 @@ MIT license. 100% local. No telemetry. DB file: .code-review-graph.db
 </section>
 
 <section name="watch">
-Run: python -m server.incremental watch (auto-updates graph on file save via watchdog)
+Run: code-review-graph watch (auto-updates graph on file save via watchdog)
 Or use PostEdit/PostGit hooks for automatic background updates.
 </section>
 

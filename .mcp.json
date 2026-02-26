@@ -2,7 +2,7 @@
   "mcpServers": {
     "code-review-graph": {
       "command": "python",
-      "args": ["-m", "server.main"],
+      "args": ["-m", "code_review_graph.main"],
       "cwd": "."
     }
   }

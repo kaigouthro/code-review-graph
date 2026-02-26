@@ -82,17 +82,17 @@ section_name: str    # usage, review-delta, review-pr, commands, legal, watch, e
 
 ```bash
 # Full build
-python -m server.incremental build --full
+code-review-graph build --full
 
 # Incremental update
-python -m server.incremental update
+code-review-graph update
 
 # Check status
-python -m server.incremental status
+code-review-graph status
 
 # Watch mode
-python -m server.incremental watch
+code-review-graph watch
 
 # Custom base ref
-python -m server.incremental update --base origin/main
+code-review-graph update --base origin/main
 ```

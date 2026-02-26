@@ -2,7 +2,7 @@
 
 from pathlib import Path
 
-from server.parser import CodeParser, NodeInfo, EdgeInfo
+from code_review_graph.parser import CodeParser, NodeInfo, EdgeInfo
 
 FIXTURES = Path(__file__).parent / "fixtures"
 

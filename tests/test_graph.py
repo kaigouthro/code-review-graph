@@ -3,8 +3,8 @@
 import tempfile
 from pathlib import Path
 
-from server.graph import GraphStore, GraphStats
-from server.parser import NodeInfo, EdgeInfo
+from code_review_graph.graph import GraphStore, GraphStats
+from code_review_graph.parser import NodeInfo, EdgeInfo
 
 
 class TestGraphStore:

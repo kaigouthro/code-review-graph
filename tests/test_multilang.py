@@ -2,7 +2,7 @@
 
 from pathlib import Path
 
-from server.parser import CodeParser
+from code_review_graph.parser import CodeParser
 
 FIXTURES = Path(__file__).parent / "fixtures"
 

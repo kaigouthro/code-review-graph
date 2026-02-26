@@ -1,7 +1,7 @@
 # Features
 
 ## v1.1.0 (Current)
-- **Watch mode**: `python -m server.incremental watch` — auto-rebuilds graph on file changes
+- **Watch mode**: `code-review-graph watch` — auto-rebuilds graph on file changes
 - **Vector embeddings**: Optional `pip install .[embeddings]` for semantic code search
 - **Go, Rust, Java verified**: 12+ languages with dedicated test coverage
 - **47 tests passing**, 7 MCP tools registered

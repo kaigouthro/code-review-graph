@@ -33,5 +33,5 @@ The graph uses SQLite with WAL mode. If you see lock errors:
 
 ## MCP server won't start
 - Verify Python path in `.mcp.json` points to the venv
-- Check `python -m server.main` runs without errors
+- Check `python -m code_review_graph.main` runs without errors
 - Ensure all dependencies are installed: `pip install -e .`

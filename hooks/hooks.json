@@ -6,7 +6,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python -m server.incremental update 2>/dev/null || true"
+            "command": "code-review-graph update 2>/dev/null || true"
           }
         ]
       }
@@ -17,7 +17,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python -m server.incremental update 2>/dev/null || true"
+            "command": "code-review-graph update 2>/dev/null || true"
           }
         ]
       }

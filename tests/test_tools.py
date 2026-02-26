@@ -3,9 +3,9 @@
 import tempfile
 from pathlib import Path
 
-from server.graph import GraphStore
-from server.parser import NodeInfo, EdgeInfo
-from server.tools import (
+from code_review_graph.graph import GraphStore
+from code_review_graph.parser import NodeInfo, EdgeInfo
+from code_review_graph.tools import (
     list_graph_stats,
     query_graph,
     semantic_search_nodes,

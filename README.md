@@ -5,9 +5,9 @@
 [![GitHub stars](https://img.shields.io/github/stars/tirth8205/code-review-graph?style=flat-square)](https://github.com/tirth8205/code-review-graph/stargazers)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=flat-square)](https://opensource.org/licenses/MIT)
 [![CI](https://github.com/tirth8205/code-review-graph/actions/workflows/ci.yml/badge.svg)](https://github.com/tirth8205/code-review-graph/actions/workflows/ci.yml)
-[![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-blue.svg?style=flat-square)](https://www.python.org/)
+[![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue.svg?style=flat-square)](https://www.python.org/)
 [![MCP](https://img.shields.io/badge/MCP-compatible-green.svg?style=flat-square)](https://modelcontextprotocol.io/)
-[![v1.1.0](https://img.shields.io/badge/version-1.1.0-purple.svg?style=flat-square)](#)
+[![v1.2.0](https://img.shields.io/badge/version-1.2.0-purple.svg?style=flat-square)](#)
 
 ---
 
@@ -40,16 +40,33 @@ For the full feature list and changelog, see [docs/FEATURES.md](docs/FEATURES.md
 
 ## 🚀 Quick Start
 
-**1. Install**
+### Installation (one command)
 
 ```bash
-git clone https://github.com/tirth8205/code-review-graph.git
-cd code-review-graph
-python3 -m venv .venv && source .venv/bin/activate
-pip install -e .
+pip install code-review-graph
 ```
 
-**2. Connect to Claude Code**
+That's it. Works on Python 3.10+.
+
+With semantic search (optional):
+
+```bash
+pip install code-review-graph[embeddings]
+```
+
+### CLI
+
+```bash
+code-review-graph build      # Parse your entire codebase
+code-review-graph update     # Incremental update (only changed files)
+code-review-graph watch      # Real-time auto-updates as you code
+code-review-graph status     # Show graph statistics
+code-review-graph serve      # Start MCP server
+```
+
+No git clone. No manual venv. No Python upgrade needed.
+
+### Connect to Claude Code
 
 Add to your project's `.mcp.json`:
 
@@ -57,15 +74,14 @@ Add to your project's `.mcp.json`:
 {
   "mcpServers": {
     "code-review-graph": {
-      "command": "/path/to/code-review-graph/.venv/bin/python",
-      "args": ["-m", "server.main"],
-      "cwd": "/path/to/code-review-graph"
+      "command": "code-review-graph",
+      "args": ["serve"]
     }
   }
 }
 ```
 
-**3. Build & review**
+### Use the skills
 
 ```
 /code-review-graph:build-graph    # Parse your codebase (~10s for 500 files)
@@ -106,10 +122,10 @@ For detailed usage instructions, see [docs/USAGE.md](docs/USAGE.md).
 
 | Component | File | Role |
 |-----------|------|------|
-| **Parser** | `server/parser.py` | Tree-sitter multi-language AST parser. Extracts nodes and relationships. |
-| **Graph** | `server/graph.py` | SQLite-backed knowledge graph with NetworkX for traversal queries. |
-| **Incremental** | `server/incremental.py` | Git-aware delta detection. Re-parses only changed files + dependents. |
-| **MCP Server** | `server/main.py` | Exposes 8 tools to Claude Code via the Model Context Protocol. |
+| **Parser** | `code_review_graph/parser.py` | Tree-sitter multi-language AST parser. Extracts nodes and relationships. |
+| **Graph** | `code_review_graph/graph.py` | SQLite-backed knowledge graph with NetworkX for traversal queries. |
+| **Incremental** | `code_review_graph/incremental.py` | Git-aware delta detection. Re-parses only changed files + dependents. |
+| **MCP Server** | `code_review_graph/main.py` | Exposes 8 tools to Claude Code via the Model Context Protocol. |
 | **Skills** | `skills/` | Three review workflows: `build-graph`, `review-delta`, `review-pr`. |
 | **Hooks** | `hooks/` | Auto-updates the graph on file edits and git commits. |
 
@@ -219,17 +235,9 @@ third_party/**
 ## 🧪 Testing
 
 ```bash
-# Activate the virtual environment
-source .venv/bin/activate
-
-# Run the full test suite
+pip install -e ".[dev]"
 pytest
-
-# Run with verbose output
-pytest -v
-
-# Lint
-ruff check server/
+ruff check code_review_graph/
 ```
 
 47 tests covering parser, graph storage, MCP tools, and multi-language support (Go, Rust, Java).
@@ -240,7 +248,7 @@ ruff check server/
 
 ### Adding a new language
 
-1. Add the extension mapping in `server/parser.py` → `EXTENSION_TO_LANGUAGE`
+1. Add the extension mapping in `code_review_graph/parser.py` → `EXTENSION_TO_LANGUAGE`
 2. Add node type mappings in `_CLASS_TYPES`, `_FUNCTION_TYPES`, `_IMPORT_TYPES`, `_CALL_TYPES`
 3. Test with a sample file in that language
 4. Submit a PR
