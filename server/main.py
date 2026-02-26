@@ -12,6 +12,7 @@ from fastmcp import FastMCP
 
 from .tools import (
     build_or_update_graph,
+    embed_graph,
     get_impact_radius,
     get_review_context,
     list_graph_stats,
@@ -137,10 +138,10 @@ def semantic_search_nodes_tool(
     limit: int = 20,
     repo_root: Optional[str] = None,
 ) -> dict:
-    """Search for code entities by name or keyword.
+    """Search for code entities by name, keyword, or semantic similarity.
 
-    Finds functions, classes, files, and types matching the query string.
-    Results are ranked by relevance (exact > prefix > contains).
+    Uses vector embeddings for semantic search when available (run embed_graph_tool
+    first, requires sentence-transformers). Falls back to keyword matching otherwise.
 
     Args:
         query: Search string to match against node names.
@@ -151,6 +152,25 @@ def semantic_search_nodes_tool(
     return semantic_search_nodes(
         query=query, kind=kind, limit=limit, repo_root=repo_root
     )
+
+
+@mcp.tool()
+def embed_graph_tool(
+    repo_root: Optional[str] = None,
+) -> dict:
+    """Compute vector embeddings for all graph nodes to enable semantic search.
+
+    Requires: pip install code-review-graph[embeddings]
+    Uses the all-MiniLM-L6-v2 model (fast, 384-dim vectors).
+    Only computes embeddings for nodes that don't already have them.
+
+    After running this, semantic_search_nodes_tool will use vector similarity
+    instead of keyword matching for much better results.
+
+    Args:
+        repo_root: Repository root path. Auto-detected if omitted.
+    """
+    return embed_graph(repo_root=repo_root)
 
 
 @mcp.tool()

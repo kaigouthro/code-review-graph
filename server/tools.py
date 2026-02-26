@@ -1,12 +1,13 @@
 """MCP tool definitions for the Code Review Graph server.
 
-Exposes 6 tools:
+Exposes 7 tools:
 1. build_or_update_graph  - full or incremental build
 2. get_impact_radius      - blast radius from changed files
 3. query_graph            - predefined graph queries
 4. get_review_context     - focused subgraph + review prompt
-5. semantic_search_nodes  - keyword search across nodes
+5. semantic_search_nodes  - keyword + vector search across nodes
 6. list_graph_stats       - aggregate statistics
+7. embed_graph            - compute vector embeddings for semantic search
 """
 
 from __future__ import annotations
@@ -17,6 +18,7 @@ from dataclasses import asdict
 from pathlib import Path
 from typing import Any, Optional
 
+from .embeddings import EmbeddingStore, embed_all_nodes, semantic_search
 from .graph import GraphStore, edge_to_dict, node_to_dict
 from .incremental import (
     collect_all_files,
@@ -509,7 +511,11 @@ def semantic_search_nodes(
     limit: int = 20,
     repo_root: str | None = None,
 ) -> dict[str, Any]:
-    """Search for nodes by name or keyword.
+    """Search for nodes by name, keyword, or semantic similarity.
+
+    Uses vector embeddings for semantic search if available (install with
+    `pip install code-review-graph[embeddings]`). Falls back to keyword
+    matching otherwise.
 
     Args:
         query: Search string to match against node names and qualified names.
@@ -522,12 +528,35 @@ def semantic_search_nodes(
     """
     store, root = _get_store(repo_root)
     try:
+        db_path = get_db_path(root)
+        emb_store = EmbeddingStore(db_path)
+        search_mode = "keyword"
+
+        try:
+            if emb_store.available and emb_store.count() > 0:
+                # Vector search
+                search_mode = "semantic"
+                raw = semantic_search(query, store, emb_store, limit=limit * 2)
+                if kind:
+                    raw = [r for r in raw if r.get("kind") == kind]
+                raw = raw[:limit]
+                return {
+                    "status": "ok",
+                    "query": query,
+                    "search_mode": search_mode,
+                    "summary": f"Found {len(raw)} node(s) matching '{query}' via semantic search"
+                    + (f" (kind={kind})" if kind else ""),
+                    "results": raw,
+                }
+        finally:
+            emb_store.close()
+
+        # Keyword fallback
         results = store.search_nodes(query, limit=limit * 2)
 
         if kind:
             results = [r for r in results if r.kind == kind]
 
-        # Rank: exact name match > prefix match > contains match
         def score(node):
             name_lower = node.name.lower()
             q_lower = query.lower()
@@ -543,6 +572,7 @@ def semantic_search_nodes(
         return {
             "status": "ok",
             "query": query,
+            "search_mode": search_mode,
             "summary": f"Found {len(results)} node(s) matching '{query}'" + (
                 f" (kind={kind})" if kind else ""
             ),
@@ -587,6 +617,17 @@ def list_graph_stats(repo_root: str | None = None) -> dict[str, Any]:
         for kind, count in sorted(stats.edges_by_kind.items()):
             summary_parts.append(f"  {kind}: {count}")
 
+        # Add embedding info if available
+        emb_store = EmbeddingStore(get_db_path(root))
+        try:
+            emb_count = emb_store.count()
+            summary_parts.append("")
+            summary_parts.append(f"Embeddings: {emb_count} nodes embedded")
+            if not emb_store.available:
+                summary_parts.append("  (install sentence-transformers for semantic search)")
+        finally:
+            emb_store.close()
+
         return {
             "status": "ok",
             "summary": "\n".join(summary_parts),
@@ -597,6 +638,57 @@ def list_graph_stats(repo_root: str | None = None) -> dict[str, Any]:
             "languages": stats.languages,
             "files_count": stats.files_count,
             "last_updated": stats.last_updated,
+            "embeddings_count": emb_count,
         }
     finally:
+        store.close()
+
+
+# ---------------------------------------------------------------------------
+# Tool 7: embed_graph
+# ---------------------------------------------------------------------------
+
+
+def embed_graph(repo_root: str | None = None) -> dict[str, Any]:
+    """Compute vector embeddings for all graph nodes to enable semantic search.
+
+    Requires: `pip install code-review-graph[embeddings]`
+    Uses the all-MiniLM-L6-v2 model (fast, 384-dim).
+
+    Only embeds nodes that don't already have up-to-date embeddings.
+
+    Args:
+        repo_root: Repository root path. Auto-detected if omitted.
+
+    Returns:
+        Number of nodes embedded and total embedding count.
+    """
+    store, root = _get_store(repo_root)
+    db_path = get_db_path(root)
+    emb_store = EmbeddingStore(db_path)
+    try:
+        if not emb_store.available:
+            return {
+                "status": "error",
+                "error": (
+                    "sentence-transformers is not installed. "
+                    "Install with: pip install code-review-graph[embeddings]"
+                ),
+            }
+
+        newly_embedded = embed_all_nodes(store, emb_store)
+        total = emb_store.count()
+
+        return {
+            "status": "ok",
+            "summary": (
+                f"Embedded {newly_embedded} new node(s). "
+                f"Total embeddings: {total}. "
+                "Semantic search is now active."
+            ),
+            "newly_embedded": newly_embedded,
+            "total_embeddings": total,
+        }
+    finally:
+        emb_store.close()
         store.close()

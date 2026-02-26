@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "code-review-graph"
-version = "1.0.0"
+version = "1.1.0"
 description = "Persistent incremental knowledge graph for token-efficient, context-aware code reviews with Claude Code"
 readme = "README.md"
 license = "MIT"
@@ -31,6 +31,10 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+embeddings = [
+    "sentence-transformers>=3.0.0",
+    "numpy>=1.26",
+]
 dev = [
     "pytest>=8.0",
     "pytest-asyncio>=0.23",

@@ -311,16 +311,101 @@ def incremental_update(
 
 
 # ---------------------------------------------------------------------------
+# Watch mode
+# ---------------------------------------------------------------------------
+
+
+def watch(repo_root: Path, store: GraphStore) -> None:
+    """Watch for file changes and auto-update the graph."""
+    from watchdog.events import FileSystemEventHandler
+    from watchdog.observers import Observer
+
+    parser = CodeParser()
+    ignore_patterns = _load_ignore_patterns(repo_root)
+
+    class GraphUpdateHandler(FileSystemEventHandler):
+        def __init__(self):
+            self._pending: set[str] = set()
+            self._last_update = 0.0
+
+        def _should_handle(self, path: str) -> bool:
+            try:
+                rel = str(Path(path).relative_to(repo_root))
+            except ValueError:
+                return False
+            if _should_ignore(rel, ignore_patterns):
+                return False
+            if parser.detect_language(Path(path)) is None:
+                return False
+            return True
+
+        def on_modified(self, event):
+            if event.is_directory:
+                return
+            if self._should_handle(event.src_path):
+                self._update_file(event.src_path)
+
+        def on_created(self, event):
+            if event.is_directory:
+                return
+            if self._should_handle(event.src_path):
+                self._update_file(event.src_path)
+
+        def on_deleted(self, event):
+            if event.is_directory:
+                return
+            store.remove_file_data(event.src_path)
+            store.commit()
+            rel = str(Path(event.src_path).relative_to(repo_root))
+            print(f"  Removed: {rel}")
+
+        def _update_file(self, abs_path: str):
+            path = Path(abs_path)
+            if not path.is_file():
+                return
+            if _is_binary(path):
+                return
+            try:
+                fhash = file_hash(path)
+                nodes, edges = parser.parse_file(path)
+                store.store_file_nodes_edges(abs_path, nodes, edges, fhash)
+                store.set_metadata("last_updated", time.strftime("%Y-%m-%dT%H:%M:%S"))
+                store.commit()
+                rel = str(path.relative_to(repo_root))
+                print(f"  Updated: {rel} ({len(nodes)} nodes, {len(edges)} edges)")
+            except Exception as e:
+                print(f"  Error updating {abs_path}: {e}")
+
+    handler = GraphUpdateHandler()
+    observer = Observer()
+    observer.schedule(handler, str(repo_root), recursive=True)
+    observer.start()
+
+    print(f"Watching {repo_root} for changes... (Ctrl+C to stop)")
+    try:
+        import time as _time
+        while True:
+            _time.sleep(1)
+    except KeyboardInterrupt:
+        observer.stop()
+    observer.join()
+    print("Watch stopped.")
+
+
+# ---------------------------------------------------------------------------
 # CLI entry point for hooks
 # ---------------------------------------------------------------------------
 
 
 def main() -> None:
-    """CLI entry point: python -m server.incremental update [--full] [--base BASE]"""
+    """CLI entry point: python -m server.incremental update [--full] [--base BASE] [--watch]"""
     import argparse
 
     ap = argparse.ArgumentParser(description="Code Review Graph - incremental updater")
-    ap.add_argument("action", choices=["update", "build", "status"], help="Action to perform")
+    ap.add_argument(
+        "action", choices=["update", "build", "status", "watch"],
+        help="Action to perform",
+    )
     ap.add_argument("--full", action="store_true", help="Force full rebuild")
     ap.add_argument("--base", default="HEAD~1", help="Git diff base (default: HEAD~1)")
     ap.add_argument("--repo", default=None, help="Repository root (auto-detected)")
@@ -348,6 +433,8 @@ def main() -> None:
                   f"{result['total_nodes']} nodes, {result['total_edges']} edges")
             if result["errors"]:
                 print(f"Errors: {len(result['errors'])}")
+        elif args.action == "watch":
+            watch(repo_root, store)
         else:
             result = incremental_update(repo_root, store, base=args.base)
             print(f"Incremental: {result['files_updated']} files updated, "
