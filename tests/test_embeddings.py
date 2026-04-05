@@ -172,11 +172,11 @@ class TestGetProviderModel:
     @patch("code_review_graph.embeddings.LocalEmbeddingProvider")
     def test_local_passes_model(self, mock_cls):
         mock_cls.return_value = MagicMock()
-        get_provider(provider=None, model="custom/model")
+        get_provider(provider="local", model="custom/model")
         mock_cls.assert_called_once_with(model_name="custom/model")
 
     @patch("code_review_graph.embeddings.LocalEmbeddingProvider")
-    def test_local_default_passes_none(self, mock_cls):
+    def test_none_default_does_not_instantiate_local(self, mock_cls):
         mock_cls.return_value = MagicMock()
         get_provider(provider=None, model=None)
         mock_cls.assert_not_called()

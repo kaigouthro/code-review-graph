@@ -67,9 +67,12 @@ Interactive D3.js force-directed graph. Starts collapsed (File nodes only) — c
 ```bash
 pip install "code-review-graph[embeddings]"
 ```
-Then use `embed_graph_tool` to compute vectors. `semantic_search_nodes_tool` automatically uses vector similarity.
+Then use `embed_graph_tool` with provider `local` to compute vectors.
+By default, provider is `none` (disabled). `semantic_search_nodes_tool` uses vectors only when available.
 
-Embedding providers: Local (sentence-transformers), Google Gemini, MiniMax. Configure via `CRG_EMBEDDING_MODEL` env var.
+Embedding providers: none, Local (sentence-transformers), Google Gemini, MiniMax.
+Configure via `provider` argument or `CRG_EMBEDDING_PROVIDER`.
+Configure local model via `CRG_EMBEDDING_MODEL`.
 
 ### 7. Detect changes with risk scoring (v2)
 ```

@@ -265,7 +265,14 @@ def get_provider(
                CRG_EMBEDDING_MODEL env var, then to all-MiniLM-L6-v2.
                For Google provider this is a Gemini model ID.
     """
-    resolved = (provider or os.environ.get("CRG_EMBEDDING_PROVIDER", DEFAULT_PROVIDER)).lower()
+    resolved_raw = (
+        provider
+        if provider is not None
+        else os.environ.get("CRG_EMBEDDING_PROVIDER", DEFAULT_PROVIDER)
+    )
+    if not isinstance(resolved_raw, str):
+        raise ValueError("Embedding provider must be a string.")
+    resolved = resolved_raw.lower()
     if resolved not in _VALID_PROVIDERS:
         raise ValueError(
             f"Unknown embedding provider '{resolved}'. "

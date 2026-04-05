@@ -43,8 +43,10 @@ Or use PostToolUse (Write|Edit|Bash) hooks for automatic background updates.
 Optional: pip install code-review-graph[embeddings]
 Then call embed_graph_tool to compute vectors.
 semantic_search_nodes_tool auto-uses vectors when available, falls back to keyword + FTS5.
-Providers: Local (all-MiniLM-L6-v2, 384-dim), Google Gemini, MiniMax (embo-01, 1536-dim).
-Configure via CRG_EMBEDDING_MODEL env var or model parameter.
+Default provider is none (disabled).
+Providers: none, Local (all-MiniLM-L6-v2, 384-dim), Google Gemini, MiniMax (embo-01, 1536-dim).
+Configure provider via CRG_EMBEDDING_PROVIDER env var or provider parameter.
+Configure model via CRG_EMBEDDING_MODEL env var or model parameter.
 </section>
 
 <section name="languages">
