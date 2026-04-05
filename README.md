@@ -185,7 +185,7 @@ The blast-radius analysis never misses an actually impacted file (perfect recall
 | **19 languages + notebooks** | Python, TypeScript/TSX, JavaScript, Vue, Go, Rust, Java, Scala, C#, Ruby, Kotlin, Swift, PHP, Solidity, C/C++, Dart, R, Perl, Lua, Jupyter/Databricks (.ipynb) |
 | **Blast-radius analysis** | Shows exactly which functions, classes, and files are affected by any change |
 | **Auto-update hooks** | Graph updates on every file edit and git commit without manual intervention |
-| **Semantic search** | Optional vector embeddings via sentence-transformers, Google Gemini, or MiniMax |
+| **Semantic search** | Optional vector embeddings via user-selected provider (default: disabled) |
 | **Interactive visualisation** | D3.js force-directed graph with edge-type toggles and search |
 | **Local storage** | SQLite file in `.code-review-graph/`. No external database, no cloud dependency. |
 | **Watch mode** | Continuous graph updates as you work |
@@ -291,7 +291,7 @@ Optional dependency groups:
 
 ```bash
 pip install code-review-graph[embeddings]          # Local vector embeddings (sentence-transformers)
-pip install code-review-graph[google-embeddings]   # Google Gemini embeddings
+pip install code-review-graph[google-embeddings]   # Google Gemini embeddings (optional)
 pip install code-review-graph[communities]         # Community detection (igraph)
 pip install code-review-graph[eval]                # Evaluation benchmarks (matplotlib)
 pip install code-review-graph[wiki]                # Wiki generation with LLM summaries (ollama)

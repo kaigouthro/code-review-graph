@@ -168,6 +168,7 @@ def _embedding_search(
     store: GraphStore,
     query: str,
     limit: int = 50,
+    provider: str | None = None,
     model: str | None = None,
 ) -> list[tuple[int, float]]:
     """Run a vector similarity search using the embedding store.
@@ -181,7 +182,7 @@ def _embedding_search(
         return []
 
     try:
-        emb_store = EmbeddingStore(store.db_path, model=model)
+        emb_store = EmbeddingStore(store.db_path, provider=provider, model=model)
         try:
             if not emb_store.available or emb_store.count() == 0:
                 return []
@@ -196,6 +197,11 @@ def _embedding_search(
             return id_scores
         finally:
             emb_store.close()
+    except ValueError:
+        # Explicitly surface provider validation errors when caller supplied one.
+        if provider is not None:
+            raise
+        return []
     except Exception as e:
         logger.warning("Embedding search failed: %s", e)
         return []
@@ -265,6 +271,7 @@ def hybrid_search(
     kind: Optional[str] = None,
     limit: int = 20,
     context_files: Optional[list[str]] = None,
+    provider: Optional[str] = None,
     model: Optional[str] = None,
 ) -> list[dict[str, Any]]:
     """Hybrid search combining FTS5 BM25 and vector embeddings via RRF.
@@ -303,7 +310,9 @@ def hybrid_search(
         logger.warning("FTS5 unavailable, will use fallback: %s", e)
 
     # Try embedding search
-    emb_results = _embedding_search(store, query, limit=fetch_limit, model=model)
+    emb_results = _embedding_search(
+        store, query, limit=fetch_limit, provider=provider, model=model
+    )
 
     # ------ Phase 2: Merge via RRF or fallback ------
     if fts_results or emb_results:

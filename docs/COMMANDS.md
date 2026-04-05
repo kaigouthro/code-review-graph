@@ -62,15 +62,18 @@ query: str           # Search string
 kind: str | None     # File, Class, Function, Type, Test
 limit: int = 20
 repo_root: str | None
-model: str | None    # Embedding model (falls back to CRG_EMBEDDING_MODEL env var)
+provider: str | None # none|local|google|minimax (default via CRG_EMBEDDING_PROVIDER or none)
+model: str | None    # Embedding model for selected provider
 ```
 
 #### `embed_graph_tool`
 ```
 repo_root: str | None
+provider: str | None # none|local|google|minimax (default via CRG_EMBEDDING_PROVIDER or none)
 model: str | None    # Embedding model name
 ```
-Requires: `pip install code-review-graph[embeddings]`
+Embeddings are disabled by default unless provider is set.
+For local provider: `pip install code-review-graph[embeddings]`
 
 #### `list_graph_stats_tool`
 ```

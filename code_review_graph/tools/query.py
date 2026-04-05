@@ -301,6 +301,7 @@ def semantic_search_nodes(
     limit: int = 20,
     repo_root: str | None = None,
     context_files: list[str] | None = None,
+    provider: str | None = None,
     model: str | None = None,
 ) -> dict[str, Any]:
     """Search for nodes by name, keyword, or semantic similarity.
@@ -316,6 +317,10 @@ def semantic_search_nodes(
         repo_root: Repository root path. Auto-detected if omitted.
         context_files: Optional list of file paths. Nodes in these files
             receive a relevance boost.
+        provider: Embedding provider override (none, local, google, minimax).
+            If omitted, falls back to CRG_EMBEDDING_PROVIDER; default is none.
+            When provider resolves to none, search uses FTS/keyword only.
+        model: Optional embedding model for the selected provider.
 
     Returns:
         Ranked list of matching nodes.
@@ -324,7 +329,7 @@ def semantic_search_nodes(
     try:
         results = hybrid_search(
             store, query, kind=kind, limit=limit, context_files=context_files,
-            model=model,
+            provider=provider, model=model,
         )
 
         search_mode = "hybrid"

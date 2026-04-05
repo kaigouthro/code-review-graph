@@ -16,12 +16,16 @@ from ._common import _get_store
 
 def embed_graph(
     repo_root: str | None = None,
+    provider: str | None = None,
     model: str | None = None,
 ) -> dict[str, Any]:
     """Compute vector embeddings for all graph nodes to enable semantic search.
 
-    Requires: ``pip install code-review-graph[embeddings]``
-    Default model: all-MiniLM-L6-v2. Override via ``model`` param or
+    Embeddings are disabled by default (provider ``none``).
+    Set ``provider`` to enable embeddings (e.g. ``local``, ``google``, ``minimax``),
+    or use CRG_EMBEDDING_PROVIDER env var.
+    For local embeddings, install: ``pip install code-review-graph[embeddings]``.
+    Default local model: all-MiniLM-L6-v2. Override via ``model`` or
     CRG_EMBEDDING_MODEL env var.
     Changing the model re-embeds all nodes automatically.
 
@@ -29,23 +33,30 @@ def embed_graph(
 
     Args:
         repo_root: Repository root path. Auto-detected if omitted.
+        provider: Embedding provider (none, local, google, minimax).
+                  Falls back to CRG_EMBEDDING_PROVIDER, then ``none``.
         model: Embedding model name (HuggingFace ID or local path).
-               Falls back to CRG_EMBEDDING_MODEL env var, then
-               all-MiniLM-L6-v2.
+                Falls back to CRG_EMBEDDING_MODEL env var, then
+                all-MiniLM-L6-v2.
 
     Returns:
         Number of nodes embedded and total embedding count.
     """
     store, root = _get_store(repo_root)
     db_path = get_db_path(root)
-    emb_store = EmbeddingStore(db_path, model=model)
+    try:
+        emb_store = EmbeddingStore(db_path, provider=provider, model=model)
+    except ValueError as exc:
+        store.close()
+        return {"status": "error", "error": str(exc)}
     try:
         if not emb_store.available:
             return {
                 "status": "error",
                 "error": (
-                    "sentence-transformers is not installed. "
-                    "Install with: pip install code-review-graph[embeddings]"
+                    "Embeddings provider unavailable or disabled. "
+                    "Set provider=local|google|minimax (or CRG_EMBEDDING_PROVIDER) "
+                    "to enable embeddings."
                 ),
             }
 
