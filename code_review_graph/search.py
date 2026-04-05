@@ -197,6 +197,11 @@ def _embedding_search(
             return id_scores
         finally:
             emb_store.close()
+    except ValueError:
+        # Explicitly surface provider validation errors when caller supplied one.
+        if provider is not None:
+            raise
+        return []
     except Exception as e:
         logger.warning("Embedding search failed: %s", e)
         return []

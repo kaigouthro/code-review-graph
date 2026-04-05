@@ -317,6 +317,10 @@ def semantic_search_nodes(
         repo_root: Repository root path. Auto-detected if omitted.
         context_files: Optional list of file paths. Nodes in these files
             receive a relevance boost.
+        provider: Embedding provider override (none, local, google, minimax).
+            If omitted, falls back to CRG_EMBEDDING_PROVIDER; default is none.
+            When provider resolves to none, search uses FTS/keyword only.
+        model: Optional embedding model for the selected provider.
 
     Returns:
         Ranked list of matching nodes.

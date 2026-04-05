@@ -169,7 +169,8 @@ def semantic_search_nodes_tool(
     """Search for code entities by name, keyword, or semantic similarity.
 
     Uses vector embeddings for semantic search when available (run embed_graph_tool
-    first, requires sentence-transformers). Falls back to keyword matching otherwise.
+    first with a provider). Supports local, google, and minimax providers;
+    falls back to keyword matching when embeddings are unavailable or disabled.
 
     Args:
         query: Search string to match against node names.
