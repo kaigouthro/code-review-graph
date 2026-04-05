@@ -163,6 +163,7 @@ def semantic_search_nodes_tool(
     kind: Optional[str] = None,
     limit: int = 20,
     repo_root: Optional[str] = None,
+    provider: Optional[str] = None,
     model: Optional[str] = None,
 ) -> dict:
     """Search for code entities by name, keyword, or semantic similarity.
@@ -175,25 +176,29 @@ def semantic_search_nodes_tool(
         kind: Optional filter: File, Class, Function, Type, or Test.
         limit: Maximum results. Default: 20.
         repo_root: Repository root path. Auto-detected if omitted.
+        provider: Embedding provider for semantic search (none, local, google, minimax).
+                  Falls back to CRG_EMBEDDING_PROVIDER env var, then none.
         model: Embedding model for query vectors. Must match the model used
-               during embed_graph. Falls back to CRG_EMBEDDING_MODEL env var,
-               then all-MiniLM-L6-v2.
+               during embed_graph for the chosen provider.
     """
     return semantic_search_nodes(
-        query=query, kind=kind, limit=limit, repo_root=repo_root, model=model
+        query=query, kind=kind, limit=limit, repo_root=repo_root, provider=provider, model=model
     )
 
 
 @mcp.tool()
 def embed_graph_tool(
     repo_root: Optional[str] = None,
+    provider: Optional[str] = None,
     model: Optional[str] = None,
 ) -> dict:
     """Compute vector embeddings for all graph nodes to enable semantic search.
 
-    Requires: pip install code-review-graph[embeddings]
-    Default model: all-MiniLM-L6-v2. Override via `model` param or
-    CRG_EMBEDDING_MODEL env var (any sentence-transformers compatible model).
+    Embeddings are disabled by default (provider `none`).
+    Set provider to `local`, `google`, or `minimax` to enable embeddings.
+    For local embeddings, install: pip install code-review-graph[embeddings]
+    Default local model: all-MiniLM-L6-v2. Override via `model` param or
+    CRG_EMBEDDING_MODEL env var.
     Changing the model re-embeds all nodes automatically.
 
     After running this, semantic_search_nodes_tool will use vector similarity
@@ -201,10 +206,12 @@ def embed_graph_tool(
 
     Args:
         repo_root: Repository root path. Auto-detected if omitted.
+        provider: Embedding provider (none, local, google, minimax).
+                  Falls back to CRG_EMBEDDING_PROVIDER env var, then none.
         model: Embedding model name (HuggingFace ID or local path).
-               Falls back to CRG_EMBEDDING_MODEL env var, then all-MiniLM-L6-v2.
+               Used by the selected provider.
     """
-    return embed_graph(repo_root=repo_root, model=model)
+    return embed_graph(repo_root=repo_root, provider=provider, model=model)
 
 
 @mcp.tool()

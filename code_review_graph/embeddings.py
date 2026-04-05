@@ -1,9 +1,10 @@
 """Vector embedding support for semantic code search.
 
 Supports multiple providers:
-1. Local (sentence-transformers) - Private, fast, offline.
-2. Google Gemini - High-quality, cloud-based. Requires explicit opt-in.
-3. MiniMax (embo-01) - High-quality 1536-dim cloud embeddings. Requires MINIMAX_API_KEY.
+1. none (default) - embeddings disabled unless explicitly enabled.
+2. local (sentence-transformers) - private, fast, offline.
+3. google (Gemini) - cloud-based, explicit opt-in.
+4. minimax (embo-01) - cloud-based, explicit opt-in.
 """
 
 from __future__ import annotations
@@ -49,6 +50,8 @@ class EmbeddingProvider(ABC):
 
 
 LOCAL_DEFAULT_MODEL = "all-MiniLM-L6-v2"
+DEFAULT_PROVIDER = "none"
+_VALID_PROVIDERS = {"none", "local", "google", "minimax"}
 
 
 class LocalEmbeddingProvider(EmbeddingProvider):
@@ -253,7 +256,8 @@ def get_provider(
     """Get an embedding provider by name.
 
     Args:
-        provider: Provider name. One of "local", "google", "minimax", or None for local.
+        provider: Provider name. One of "none", "local", "google", "minimax",
+                  or None to use CRG_EMBEDDING_PROVIDER env var, then "none".
                   Google requires GOOGLE_API_KEY env var and explicit opt-in.
                   MiniMax requires MINIMAX_API_KEY env var and explicit opt-in.
         model: Model name/path to use. For local provider this is any
@@ -261,7 +265,17 @@ def get_provider(
                CRG_EMBEDDING_MODEL env var, then to all-MiniLM-L6-v2.
                For Google provider this is a Gemini model ID.
     """
-    if provider == "minimax":
+    resolved = (provider or os.environ.get("CRG_EMBEDDING_PROVIDER", DEFAULT_PROVIDER)).lower()
+    if resolved not in _VALID_PROVIDERS:
+        raise ValueError(
+            f"Unknown embedding provider '{resolved}'. "
+            f"Valid providers: {', '.join(sorted(_VALID_PROVIDERS))}."
+        )
+
+    if resolved == "none":
+        return None
+
+    if resolved == "minimax":
         api_key = os.environ.get("MINIMAX_API_KEY")
         if not api_key:
             raise ValueError(
@@ -270,7 +284,7 @@ def get_provider(
             )
         return MiniMaxEmbeddingProvider(api_key=api_key)
 
-    if provider == "google":
+    if resolved == "google":
         api_key = os.environ.get("GOOGLE_API_KEY")
         if not api_key:
             raise ValueError(
@@ -285,7 +299,7 @@ def get_provider(
         except ImportError:
             return None
 
-    # Default: local
+    # local provider
     try:
         return LocalEmbeddingProvider(model_name=model)
     except ImportError:

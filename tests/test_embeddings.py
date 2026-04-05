@@ -179,7 +179,21 @@ class TestGetProviderModel:
     def test_local_default_passes_none(self, mock_cls):
         mock_cls.return_value = MagicMock()
         get_provider(provider=None, model=None)
+        mock_cls.assert_not_called()
+
+    @patch.dict("os.environ", {"CRG_EMBEDDING_PROVIDER": "local"})
+    @patch("code_review_graph.embeddings.LocalEmbeddingProvider")
+    def test_env_provider_local(self, mock_cls):
+        mock_cls.return_value = MagicMock()
+        get_provider(provider=None, model=None)
         mock_cls.assert_called_once_with(model_name=None)
+
+    def test_none_provider_returns_none(self):
+        assert get_provider(provider="none") is None
+
+    def test_invalid_provider_raises(self):
+        with pytest.raises(ValueError, match="Unknown embedding provider"):
+            get_provider(provider="invalid-provider")
 
 
 class TestEmbeddingStoreModelPassthrough:

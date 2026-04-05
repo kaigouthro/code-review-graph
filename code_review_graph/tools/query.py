@@ -301,6 +301,7 @@ def semantic_search_nodes(
     limit: int = 20,
     repo_root: str | None = None,
     context_files: list[str] | None = None,
+    provider: str | None = None,
     model: str | None = None,
 ) -> dict[str, Any]:
     """Search for nodes by name, keyword, or semantic similarity.
@@ -324,7 +325,7 @@ def semantic_search_nodes(
     try:
         results = hybrid_search(
             store, query, kind=kind, limit=limit, context_files=context_files,
-            model=model,
+            provider=provider, model=model,
         )
 
         search_mode = "hybrid"
