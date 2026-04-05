@@ -178,8 +178,7 @@ class TestGetProviderModel:
     @patch("code_review_graph.embeddings.LocalEmbeddingProvider")
     def test_none_default_does_not_instantiate_local(self, mock_cls):
         mock_cls.return_value = MagicMock()
-        with patch.dict(os.environ, {}, clear=False):
-            os.environ.pop("CRG_EMBEDDING_PROVIDER", None)
+        with patch.dict(os.environ, {}, clear=True):
             get_provider(provider=None, model=None)
         mock_cls.assert_not_called()
 
